@@ -68,7 +68,6 @@ class GameObject:
 
     def draw(self, field: Surface = None, grid_size: int = 0):
         """Draws game object"""
-        
 
 
 class Apple(GameObject):
