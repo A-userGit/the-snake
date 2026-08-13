@@ -1,8 +1,7 @@
 import random
 import pygame
-
+from abc import ABC, abstractmethod
 from collections import deque
-from abc import ABC
 from itertools import islice
 from pygame import Surface
 
@@ -43,76 +42,10 @@ pygame.display.set_caption('Змейка')
 # Настройка времени:
 clock = pygame.time.Clock()
 
-class GameEngine:
-    """Processes game logic"""
-    def __init__(self, screen: Surface, field_width: int = 0,
-                 field_height: int = 0, grid_size: int = 0,
-                 field_color: tuple[int, int, int] =(0, 0, 0)) -> None:
-        self.__width = field_width
-        self.__height = field_height
-        self.__grid_size = grid_size
-        self.__screen = screen
-        self.__color = field_color
-
-    def set_game(self, snake: Snake, apple: Apple,
-                 position: tuple[int, int] = (0, 0),
-                direction: tuple[int, int] = (0, 0)):
-        """Sets up game at default start"""
-        self.__screen.fill(self.__color)
-        apple.randomize_position([position], self.__width,
-                                 self.__height, self.__grid_size)
-        apple.draw(self.__screen, self.__grid_size)
-        snake.reset(position, direction)
-        snake.draw(self.__screen, self.__grid_size)
-
-    def check_collisions(self, first_body: tuple[int, int] = (0, 0),
-                         second_body: tuple[int, int] = (0, 0))-> bool:
-        """Checks collisions between two objects"""
-        if first_body == second_body:
-            return True
-        return False
-
-    def check_collisions_with_area(self,
-                                   area_coordinates: list[tuple[int, int]],
-                                   second_object: tuple[int, int] =
-                                   (0, 0))-> bool:
-        """Checks collisions between object and set of objects"""
-        for coordinates_set in area_coordinates:
-            if self.check_collisions(coordinates_set, second_object):
-                return True
-        return False
-
-    def redraw_field_part(self, coordinates: tuple[int, int]):
-        """Redraws field part with basic color"""
-        last_rect = pygame.Rect(coordinates, (self.__grid_size,
-                                              self.__grid_size))
-        pygame.draw.rect(screen, self.__color, last_rect)
-
-    def process_movement(self, snake: Snake, apple: Apple)-> bool:
-        """Processes movement of snake and its collisions with apple and itself"""
-        tail_position = snake.get_tail_position()
-        tail_moved = snake.move(self.__grid_size, self.__width, self.__height)
-        collided = self.check_collisions_with_area(snake.body,
-                                                   snake.get_head_position())
-        if collided:
-            return False
-        if tail_moved:
-            self.redraw_field_part(tail_position)
-        apple_eaten = self.check_collisions(snake.get_head_position(),
-                                            apple.position)
-        if apple_eaten:
-            snake.eat_apple()
-            restricted_positions = snake.positions
-            restricted_positions.append(tail_position)
-            apple.randomize_position(list(restricted_positions),
-                                     self.__width, self.__height,
-                                     self.__grid_size)
-            apple.draw(self.__screen, self.__grid_size)
-        snake.draw(self.__screen, self.__grid_size)
-        return True
 
 class GameObject(ABC):
     """Base class for game objects"""
+
     def __init__(self, position: tuple[int, int] = (0, 0),
                  body_color: tuple[int, int, int] = (0, 0, 0)):
 
@@ -120,7 +53,8 @@ class GameObject(ABC):
         self._body_color: tuple[int, int, int] = body_color
 
     @property
-    def position(self)-> tuple[int, int]:
+    def position(self) -> tuple[int, int]:
+        """Returns position"""
         return self._position
 
     @position.setter
@@ -128,21 +62,23 @@ class GameObject(ABC):
         self._position = new_position
 
     @property
-    def body_color(self)-> tuple[int, int, int]:
+    def body_color(self) -> tuple[int, int, int]:
+        """Returns body color"""
         return self._body_color
 
-    #method is abstract but i cant use @abstract method because autotests will crash
+    @abstractmethod
     def draw(self, field: Surface, grid_size: int):
+        """Draws game object"""
         pass
-
 
 
 class Apple(GameObject):
     """Class for apple object"""
+
     def __init__(self, position: tuple[int, int] = (0, 0),
                  body_color: tuple[int, int, int] = (0, 0, 0),
                  border_size: int = 0,
-                 border_color: tuple[int, int, int]=(0, 0, 0)):
+                 border_color: tuple[int, int, int] = (0, 0, 0)):
 
         super().__init__(position, body_color)
         self.__border_color = border_color
@@ -166,19 +102,20 @@ class Apple(GameObject):
                     break
         self.position = (x_pos, y_pos)
 
-
     def draw(self, field: Surface, grid_size: int):
         """Draws apple"""
         rect = pygame.Rect(self._position, (grid_size, grid_size))
         pygame.draw.rect(field, self._body_color, rect)
         pygame.draw.rect(field, self.__border_color, rect, self.__border_size)
 
+
 class Snake(GameObject):
     """Class for snake object"""
+
     def __init__(self, position: tuple[int, int] = (0, 0),
                  body_color: tuple[int, int, int] = (0, 0, 0),
                  direction: tuple[int, int] = (1,0),
-                 border_color: tuple[int, int, int] = (0,0,0),
+                 border_color: tuple[int, int, int] = (0, 0, 0),
                  border_size: int = 0):
 
         super().__init__(position, body_color)
@@ -189,7 +126,8 @@ class Snake(GameObject):
         self.__length = 1
 
     @property
-    def direction(self)->tuple[int, int]:
+    def direction(self) ->tuple[int, int]:
+        """Returns direction of snake"""
         return self.__direction
 
     @direction.setter
@@ -197,11 +135,13 @@ class Snake(GameObject):
         self.__direction = value
 
     @property
-    def positions(self)-> deque[tuple[int, int]]:
+    def positions(self) -> deque[tuple[int, int]]:
+        """Returns positions of snake body elements"""
         return self.__positions
 
     @property
-    def body(self)-> list[tuple[int, int]]:
+    def body(self) -> list[tuple[int, int]]:
+        """Returns snake body"""
         return list(islice(self.__positions, 1, None))
 
     def move(self, step: int, board_width: int = 0, board_height: int = 0):
@@ -239,17 +179,89 @@ class Snake(GameObject):
         pygame.draw.rect(field, self.__border_color, head_rect,
                          self.__border_size)
 
-    def get_head_position(self)-> tuple[int, int]:
+    def get_head_position(self) -> tuple[int, int]:
+        """Gets snake head position"""
         return self.__positions[0]
 
     def update_direction(self, direction: tuple[int, int] = (0, 0)):
+        """Updates snake direction"""
         self.__direction = direction
 
     def eat_apple(self):
-        self.__length =+ 1
+        """Sets snake's length if it consumes apple"""
+        self.__length = self.__length + 1
 
-    def get_tail_position(self)-> tuple[int, int]:
+    def get_tail_position(self) -> tuple[int, int]:
+        """Gets snake tail position"""
         return self.__positions[-1]
+
+
+class GameEngine:
+    """Processes game logic"""
+
+    def __init__(self, screen: Surface, field_width: int = 0,
+                 field_height: int = 0, grid_size: int = 0,
+                 field_color: tuple[int, int, int] = (0, 0, 0)) -> None:
+        self.__width = field_width
+        self.__height = field_height
+        self.__grid_size = grid_size
+        self.__screen = screen
+        self.__color = field_color
+
+    def set_game(self, snake: Snake, apple: Apple,
+                 position: tuple[int, int] = (0, 0),
+                 direction: tuple[int, int] = (0, 0)):
+        """Sets up game at default start"""
+        self.__screen.fill(self.__color)
+        apple.randomize_position([position], self.__width,
+                                 self.__height, self.__grid_size)
+        apple.draw(self.__screen, self.__grid_size)
+        snake.reset(position, direction)
+        snake.draw(self.__screen, self.__grid_size)
+
+    def check_collisions(self, first_body: tuple[int, int] = (0, 0),
+                         second_body: tuple[int, int] = (0, 0)) -> bool:
+        """Checks collisions between two objects"""
+        return first_body == second_body
+
+    def check_collisions_with_area(self,
+                                   area_coordinates: list[tuple[int, int]],
+                                   second_object: tuple[int, int] =
+                                   (0, 0)) -> bool:
+        """Checks collisions between object and set of objects"""
+        for coordinates_set in area_coordinates:
+            if self.check_collisions(coordinates_set, second_object):
+                return True
+        return False
+
+    def redraw_field_part(self, coordinates: tuple[int, int]):
+        """Redraws field part with basic color"""
+        last_rect = pygame.Rect(coordinates, (self.__grid_size,
+                                              self.__grid_size))
+        pygame.draw.rect(screen, self.__color, last_rect)
+
+    def process_movement(self, snake: Snake, apple: Apple) -> bool:
+        """Processes movement of snake and its collisions with apple, itself"""
+        tail_position = snake.get_tail_position()
+        tail_moved = snake.move(self.__grid_size, self.__width, self.__height)
+        collided = self.check_collisions_with_area(snake.body,
+                                                   snake.get_head_position())
+        if collided:
+            return False
+        if tail_moved:
+            self.redraw_field_part(tail_position)
+        apple_eaten = self.check_collisions(snake.get_head_position(),
+                                            apple.position)
+        if apple_eaten:
+            snake.eat_apple()
+            restricted_positions = snake.positions
+            restricted_positions.append(tail_position)
+            apple.randomize_position(list(restricted_positions),
+                                     self.__width, self.__height,
+                                     self.__grid_size)
+            apple.draw(self.__screen, self.__grid_size)
+        snake.draw(self.__screen, self.__grid_size)
+        return True
 
 
 def handle_keys(game_object: Snake):
@@ -270,7 +282,8 @@ def handle_keys(game_object: Snake):
 
 
 def main():
-    start_position = (SCREEN_WIDTH//2, SCREEN_HEIGHT//2)
+    """Main function"""
+    start_position = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
     start_direction = (1, 0)
     # Инициализация PyGame:
     pygame.init()
