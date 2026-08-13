@@ -1,9 +1,9 @@
-import pygame
 import random
 from abc import ABC, abstractmethod
 from collections import deque
 from itertools import islice
 
+import pygame
 from pygame import Surface
 
 # Константы для размеров поля и сетки:
