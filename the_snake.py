@@ -67,10 +67,8 @@ class GameObject(ABC):
         """Returns body color"""
         return self._body_color
 
-    @abstractmethod
-    def draw(self, field: Surface, grid_size: int):
+    def draw(self, field: Surface = None, grid_size: int = 0):
         """Draws game object"""
-        pass
 
 
 class Apple(GameObject):
