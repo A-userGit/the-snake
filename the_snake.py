@@ -1,5 +1,4 @@
 import random
-from abc import ABC, abstractmethod
 from collections import deque
 from itertools import islice
 
@@ -44,7 +43,7 @@ pygame.display.set_caption('Змейка')
 clock = pygame.time.Clock()
 
 
-class GameObject(ABC):
+class GameObject:
     """Base class for game objects"""
 
     def __init__(self, position: tuple[int, int] = (0, 0),
@@ -69,6 +68,7 @@ class GameObject(ABC):
 
     def draw(self, field: Surface = None, grid_size: int = 0):
         """Draws game object"""
+        
 
 
 class Apple(GameObject):
