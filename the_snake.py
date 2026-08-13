@@ -1,8 +1,9 @@
-import random
 import pygame
+import random
 from abc import ABC, abstractmethod
 from collections import deque
 from itertools import islice
+
 from pygame import Surface
 
 # Константы для размеров поля и сетки:
@@ -114,7 +115,7 @@ class Snake(GameObject):
 
     def __init__(self, position: tuple[int, int] = (0, 0),
                  body_color: tuple[int, int, int] = (0, 0, 0),
-                 direction: tuple[int, int] = (1,0),
+                 direction: tuple[int, int] = (1, 0),
                  border_color: tuple[int, int, int] = (0, 0, 0),
                  border_size: int = 0):
 
@@ -126,7 +127,7 @@ class Snake(GameObject):
         self.__length = 1
 
     @property
-    def direction(self) ->tuple[int, int]:
+    def direction(self) -> tuple[int, int]:
         """Returns direction of snake"""
         return self.__direction
 
