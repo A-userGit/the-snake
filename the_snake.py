@@ -1,6 +1,6 @@
 import random
+from random import choice
 from itertools import product
-from random import randint, choice
 
 import pygame
 
@@ -20,7 +20,7 @@ OPPOSITE_DIRECTIONS = {UP: DOWN, LEFT: RIGHT, RIGHT: LEFT, DOWN: UP}
 
 KEYS_AND_DIRECTIONS = {pygame.K_UP: UP, pygame.K_DOWN: DOWN,
                        pygame.K_LEFT: LEFT, pygame.K_RIGHT: RIGHT,
-                       pygame.K_w :UP, pygame.K_s: DOWN,
+                       pygame.K_w: UP, pygame.K_s: DOWN,
                        pygame.K_a: LEFT, pygame.K_d: RIGHT}
 
 BOARD_BACKGROUND_COLOR = (187, 187, 187)
@@ -70,10 +70,11 @@ class GameObject:
 
     def draw(self):
         """Draws basic rectangle"""
-        raise NotImplementedError("This method must be overridden by a subclass.")
+        raise NotImplementedError('This method must be overridden by a subclass.')
 
     def draw_rectangle(self, position: tuple[int, int],
-                       color: tuple[int, int, int] = None, border_color: tuple[int, int, int] = None):
+                       color: tuple[int, int, int] = None,
+                       border_color: tuple[int, int, int] = None):
         """Draws rectangle"""
         rect_color = color or self.body_color
         rect_border_color = border_color or BORDER_COLOR
@@ -94,7 +95,8 @@ class Apple(GameObject):
 
     def randomize_position(self, restricted_positions: list[tuple[int, int]]):
         """Sets apple position randomly avoiding restricted areas"""
-        self.position = (random.choice(tuple(ALL_CELLS - set(restricted_positions))))
+        self.position = (random.choice(tuple(ALL_CELLS -
+                                             set(restricted_positions))))
 
     def draw(self):
         """Draws apple"""
@@ -113,8 +115,11 @@ class Snake(GameObject):
         """Moves snake in direction"""
         x_head, y_head = self.get_head_position()
         direction_x, direction_y = self.direction
-        self.positions.insert(0, ((x_head + GRID_SIZE * direction_x) % SCREEN_WIDTH,
-                                  (y_head + GRID_SIZE * direction_y) % SCREEN_HEIGHT))
+        self.positions.insert(0,
+                              ((x_head + GRID_SIZE * direction_x) %
+                               SCREEN_WIDTH,
+                                  (y_head + GRID_SIZE * direction_y) %
+                               SCREEN_HEIGHT))
         if self.length < len(self.positions):
             self.positions.pop()
             return True
@@ -179,7 +184,8 @@ class GameEngine:
         if collided:
             return False
         if tail_moved:
-            self.snake.draw_rectangle(tail_position, BOARD_BACKGROUND_COLOR, BOARD_BACKGROUND_COLOR)
+            self.snake.draw_rectangle(tail_position, BOARD_BACKGROUND_COLOR,
+                                      BOARD_BACKGROUND_COLOR)
         apple_eaten = (self.snake.get_head_position() == self.apple.position)
         if apple_eaten:
             self.snake.eat_apple()
@@ -194,7 +200,9 @@ class GameEngine:
 def handle_keys(snake: Snake):
     """Handles keyboard events"""
     for event in pygame.event.get():
-        if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
+        if (event.type == pygame.QUIT or
+                (event.type == pygame.KEYDOWN and
+                 event.key == pygame.K_ESCAPE)):
             pygame.quit()
             raise SystemExit
         if event.type == pygame.KEYDOWN:
