@@ -1,6 +1,6 @@
 import random
-from random import choice
 from itertools import product
+from random import choice
 
 import pygame
 
@@ -70,7 +70,8 @@ class GameObject:
 
     def draw(self):
         """Draws basic rectangle"""
-        raise NotImplementedError('This method must be overridden by a subclass.')
+        raise NotImplementedError('This method must be '
+                                  'overridden by a subclass.')
 
     def draw_rectangle(self, position: tuple[int, int],
                        color: tuple[int, int, int] = None,
@@ -95,8 +96,8 @@ class Apple(GameObject):
 
     def randomize_position(self, restricted_positions: list[tuple[int, int]]):
         """Sets apple position randomly avoiding restricted areas"""
-        self.position = (random.choice(tuple(ALL_CELLS -
-                                             set(restricted_positions))))
+        self.position = (random.choice(tuple(ALL_CELLS
+                                             - set(restricted_positions))))
 
     def draw(self):
         """Draws apple"""
@@ -200,9 +201,9 @@ class GameEngine:
 def handle_keys(snake: Snake):
     """Handles keyboard events"""
     for event in pygame.event.get():
-        if (event.type == pygame.QUIT or
-                (event.type == pygame.KEYDOWN and
-                 event.key == pygame.K_ESCAPE)):
+        if (event.type == pygame.QUIT
+                or (event.type == pygame.KEYDOWN
+                    and event.key == pygame.K_ESCAPE)):
             pygame.quit()
             raise SystemExit
         if event.type == pygame.KEYDOWN:
