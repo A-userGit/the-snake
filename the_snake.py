@@ -1,5 +1,6 @@
 import random
 from itertools import product
+from random import randint, choice
 
 import pygame
 
@@ -18,12 +19,14 @@ RIGHT = (1, 0)
 OPPOSITE_DIRECTIONS = {UP: DOWN, LEFT: RIGHT, RIGHT: LEFT, DOWN: UP}
 
 KEYS_AND_DIRECTIONS = {pygame.K_UP: UP, pygame.K_DOWN: DOWN,
-                       pygame.K_LEFT: LEFT, pygame.K_RIGHT: RIGHT}
+                       pygame.K_LEFT: LEFT, pygame.K_RIGHT: RIGHT,
+                       pygame.K_w :UP, pygame.K_s: DOWN,
+                       pygame.K_a: LEFT, pygame.K_d: RIGHT}
 
 BOARD_BACKGROUND_COLOR = (187, 187, 187)
 
 # Цвет границы ячейки
-BORDER_COLOR = (187, 187, 187)
+BORDER_COLOR = (0, 0, 0)
 
 BORDER_SIZE = 1
 
@@ -67,16 +70,16 @@ class GameObject:
 
     def draw(self):
         """Draws basic rectangle"""
-        self.draw_rectangle(self.position)
+        raise NotImplementedError("This method must be overridden by a subclass.")
 
     def draw_rectangle(self, position: tuple[int, int],
-                       color: tuple[int, int, int] = DEFAULT_COLOR):
+                       color: tuple[int, int, int] = None, border_color: tuple[int, int, int] = None):
         """Draws rectangle"""
-        if color == DEFAULT_COLOR:
-            color = self.body_color
+        rect_color = color or self.body_color
+        rect_border_color = border_color or BORDER_COLOR
         rect = pygame.Rect(position, (GRID_SIZE, GRID_SIZE))
-        pygame.draw.rect(screen, color, rect)
-        pygame.draw.rect(screen, BORDER_COLOR, rect, BORDER_SIZE)
+        pygame.draw.rect(screen, rect_color, rect)
+        pygame.draw.rect(screen, rect_border_color, rect, BORDER_SIZE)
 
 
 class Apple(GameObject):
@@ -86,34 +89,32 @@ class Apple(GameObject):
                  body_color: tuple[int, int, int] = APPLE_COLOR):
 
         super().__init__(body_color=body_color)
-        if restricted_positions is None:
-            restricted_positions = list([])
+        restricted_positions = restricted_positions or []
         self.randomize_position(restricted_positions)
 
     def randomize_position(self, restricted_positions: list[tuple[int, int]]):
         """Sets apple position randomly avoiding restricted areas"""
-        pos = (random.choice(tuple(ALL_CELLS - set(restricted_positions))))
-        self.position = pos
+        self.position = (random.choice(tuple(ALL_CELLS - set(restricted_positions))))
+
+    def draw(self):
+        """Draws apple"""
+        self.draw_rectangle(self.position, APPLE_COLOR)
 
 
 class Snake(GameObject):
     """Class for snake object"""
 
-    def __init__(self, body_color: tuple[int, int, int] = SNAKE_COLOR,
-                 direction: tuple[int, int] = DEFAULT_DIRECTION):
+    def __init__(self, body_color: tuple[int, int, int] = SNAKE_COLOR):
 
         super().__init__(body_color=body_color)
-        self.positions = [DEFAULT_POSITION]
-        self.direction = direction
-        self.length = 1
+        self.reset()
 
     def move(self):
         """Moves snake in direction"""
         x_head, y_head = self.get_head_position()
         direction_x, direction_y = self.direction
-        x_new_head = (x_head + GRID_SIZE * direction_x) % SCREEN_WIDTH
-        y_new_head = (y_head + GRID_SIZE * direction_y) % SCREEN_HEIGHT
-        self.positions.insert(0, (x_new_head, y_new_head))
+        self.positions.insert(0, ((x_head + GRID_SIZE * direction_x) % SCREEN_WIDTH,
+                                  (y_head + GRID_SIZE * direction_y) % SCREEN_HEIGHT))
         if self.length < len(self.positions):
             self.positions.pop()
             return True
@@ -123,7 +124,7 @@ class Snake(GameObject):
         """Gets snake head position"""
         return self.positions[0]
 
-    def update_direction(self, direction: tuple[int, int] = (0, 0)):
+    def update_direction(self, direction: tuple[int, int]):
         """Updates snake direction"""
         if OPPOSITE_DIRECTIONS[direction] != self.direction:
             self.direction = direction
@@ -147,49 +148,39 @@ class Snake(GameObject):
     def reset(self):
         """Resets snake position and direction"""
         self.positions = [DEFAULT_POSITION]
-        self.direction = DEFAULT_DIRECTION
+        x_direction = random.randint(-1, 1)
+        y_direction = 0
+        if x_direction == 0:
+            y_direction = choice([-1, 1])
+        self.direction = (x_direction, y_direction)
         self.length = 1
 
 
 class GameEngine:
     """Processes game logic"""
 
-    def __init__(self, snake: Snake):
+    def __init__(self, snake: Snake, apple: Apple):
         self.snake = snake
-        self.apple = None
+        self.apple = apple
 
     def set_game(self):
         """Sets up game at default start"""
         screen.fill(BOARD_BACKGROUND_COLOR)
         self.snake.reset()
-        self.apple = Apple(self.snake.positions)
+        self.apple.randomize_position(self.snake.positions)
         self.snake.draw()
         self.apple.draw()
-
-    def check_collisions(self, first_body: tuple[int, int] = (0, 0),
-                         second_body: tuple[int, int] = (0, 0)) -> bool:
-        """Checks collisions between two objects"""
-        return first_body == second_body
-
-    def check_collisions_with_area(self,
-                                   area_coordinates: list[tuple[int, int]],
-                                   second_object: tuple[int, int] =
-                                   DEFAULT_POSITION) -> bool:
-        """Checks collisions between object and set of objects"""
-        return second_object in area_coordinates
 
     def process_movement(self) -> bool:
         """Processes movement of snake and its collisions with apple, itself"""
         tail_position = self.snake.get_tail_position()
         tail_moved = self.snake.move()
-        collided = self.check_collisions_with_area(
-            self.snake.get_body(), self.snake.get_head_position())
+        collided = self.snake.get_head_position() in self.snake.get_body()
         if collided:
             return False
         if tail_moved:
-            self.snake.draw_rectangle(tail_position, BOARD_BACKGROUND_COLOR)
-        apple_eaten = self.check_collisions(self.snake.get_head_position(),
-                                            self.apple.position)
+            self.snake.draw_rectangle(tail_position, BOARD_BACKGROUND_COLOR, BOARD_BACKGROUND_COLOR)
+        apple_eaten = (self.snake.get_head_position() == self.apple.position)
         if apple_eaten:
             self.snake.eat_apple()
             restricted_positions = self.snake.positions
@@ -200,20 +191,13 @@ class GameEngine:
         return True
 
 
-def exit_game():
-    """Exits game"""
-    pygame.quit()
-    raise SystemExit
-
-
 def handle_keys(snake: Snake):
     """Handles keyboard events"""
     for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            exit_game()
+        if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
+            pygame.quit()
+            raise SystemExit
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
-                exit_game()
             direction = KEYS_AND_DIRECTIONS.get(event.key)
             if direction:
                 snake.update_direction(direction)
@@ -223,7 +207,8 @@ def main():
     """Main function"""
     pygame.init()
     snake = Snake()
-    engine = GameEngine(snake)
+    apple = Apple(snake.positions)
+    engine = GameEngine(snake, apple)
     engine.set_game()
     while True:
         handle_keys(engine.snake)
