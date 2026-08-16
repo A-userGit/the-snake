@@ -74,24 +74,20 @@ class GameObject:
                                   'overridden by a subclass.')
 
     def draw_rectangle(self, position: tuple[int, int],
-                       color: tuple[int, int, int] = None,
-                       border_color: tuple[int, int, int] = None):
+                       color: tuple[int, int, int] = None):
         """Draws rectangle"""
         rect_color = color or self.body_color
-        rect_border_color = border_color or BORDER_COLOR
         rect = pygame.Rect(position, (GRID_SIZE, GRID_SIZE))
         pygame.draw.rect(screen, rect_color, rect)
-        pygame.draw.rect(screen, rect_border_color, rect, BORDER_SIZE)
 
 
 class Apple(GameObject):
     """Class for apple object"""
 
-    def __init__(self, restricted_positions=None,
+    def __init__(self, restricted_positions = None,
                  body_color: tuple[int, int, int] = APPLE_COLOR):
 
         super().__init__(body_color=body_color)
-        restricted_positions = restricted_positions or []
         self.randomize_position(restricted_positions)
 
     def randomize_position(self, restricted_positions: list[tuple[int, int]]):
@@ -101,7 +97,7 @@ class Apple(GameObject):
 
     def draw(self):
         """Draws apple"""
-        self.draw_rectangle(self.position, APPLE_COLOR)
+        self.draw_rectangle(self.position)
 
 
 class Snake(GameObject):
@@ -117,10 +113,8 @@ class Snake(GameObject):
         x_head, y_head = self.get_head_position()
         direction_x, direction_y = self.direction
         self.positions.insert(0,
-                              ((x_head + GRID_SIZE * direction_x) %
-                               SCREEN_WIDTH,
-                                  (y_head + GRID_SIZE * direction_y) %
-                               SCREEN_HEIGHT))
+            ((x_head + GRID_SIZE * direction_x) % SCREEN_WIDTH,
+            (y_head + GRID_SIZE * direction_y) % SCREEN_HEIGHT))
         if self.length < len(self.positions):
             self.positions.pop()
             return True
@@ -154,18 +148,15 @@ class Snake(GameObject):
     def reset(self):
         """Resets snake position and direction"""
         self.positions = [DEFAULT_POSITION]
-        x_direction = random.randint(-1, 1)
-        y_direction = 0
-        if x_direction == 0:
-            y_direction = choice([-1, 1])
-        self.direction = (x_direction, y_direction)
+        self.direction = choice([UP, DOWN, RIGHT, LEFT])
         self.length = 1
 
 
-class GameEngine:
+class GameEngine(GameObject):
     """Processes game logic"""
 
     def __init__(self, snake: Snake, apple: Apple):
+        super().__init__(body_color=BOARD_BACKGROUND_COLOR)
         self.snake = snake
         self.apple = apple
 
@@ -183,10 +174,10 @@ class GameEngine:
         tail_moved = self.snake.move()
         collided = self.snake.get_head_position() in self.snake.get_body()
         if collided:
-            return False
+            return False #обработка столкновения змейки самой с собой
+            # отрисовка делается через ресет игры
         if tail_moved:
-            self.snake.draw_rectangle(tail_position, BOARD_BACKGROUND_COLOR,
-                                      BOARD_BACKGROUND_COLOR)
+            self.draw_rectangle(tail_position)
         apple_eaten = (self.snake.get_head_position() == self.apple.position)
         if apple_eaten:
             self.snake.eat_apple()
