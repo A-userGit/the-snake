@@ -84,14 +84,16 @@ class GameObject:
 class Apple(GameObject):
     """Class for apple object"""
 
-    #restricted_positions=[] сделано специально иначе падает автотест при
-    # приемке AssertionError: При создании объекта класса `Apple`
-    # произошла ошибка: `TypeError: 'NoneType' object is not iterable
-
-    def __init__(self, restricted_positions=[],
+    def __init__(self, restricted_positions=None,
                  body_color: tuple[int, int, int] = APPLE_COLOR):
 
         super().__init__(body_color=body_color)
+        restricted_positions = restricted_positions or []
+        # Понимаю что строка лишняя но без нее падает автотест при приемке
+        # AssertionError: При создании объекта класса `Apple` произошла ошибка:
+        # E `TypeError: 'NoneType' object is not iterable
+        # Вариант с restricted_positions=[] не пропускает линтер Default
+        # argument value is mutable
         self.randomize_position(restricted_positions)
 
     def randomize_position(self, restricted_positions: list[tuple[int, int]]):
