@@ -84,7 +84,11 @@ class GameObject:
 class Apple(GameObject):
     """Class for apple object"""
 
-    def __init__(self, restricted_positions=None,
+    #restricted_positions=[] сделано специально иначе падает автотест при
+    # приемке AssertionError: При создании объекта класса `Apple`
+    # произошла ошибка: `TypeError: 'NoneType' object is not iterable
+
+    def __init__(self, restricted_positions=[],
                  body_color: tuple[int, int, int] = APPLE_COLOR):
 
         super().__init__(body_color=body_color)
