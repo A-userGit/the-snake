@@ -84,7 +84,7 @@ class GameObject:
 class Apple(GameObject):
     """Class for apple object"""
 
-    def __init__(self, restricted_positions = None,
+    def __init__(self, restricted_positions=None,
                  body_color: tuple[int, int, int] = APPLE_COLOR):
 
         super().__init__(body_color=body_color)
@@ -112,9 +112,10 @@ class Snake(GameObject):
         """Moves snake in direction"""
         x_head, y_head = self.get_head_position()
         direction_x, direction_y = self.direction
-        self.positions.insert(0,
-            ((x_head + GRID_SIZE * direction_x) % SCREEN_WIDTH,
-            (y_head + GRID_SIZE * direction_y) % SCREEN_HEIGHT))
+        self.positions.insert(0, (
+            (x_head + GRID_SIZE * direction_x) % SCREEN_WIDTH,
+            (y_head + GRID_SIZE * direction_y) % SCREEN_HEIGHT
+        ))
         if self.length < len(self.positions):
             self.positions.pop()
             return True
@@ -174,8 +175,7 @@ class GameEngine(GameObject):
         tail_moved = self.snake.move()
         collided = self.snake.get_head_position() in self.snake.get_body()
         if collided:
-            return False #обработка столкновения змейки самой с собой
-            # отрисовка делается через ресет игры
+            return False
         if tail_moved:
             self.draw_rectangle(tail_position)
         apple_eaten = (self.snake.get_head_position() == self.apple.position)
