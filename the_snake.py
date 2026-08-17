@@ -123,7 +123,6 @@ class Snake(GameObject):
         else:
             self.last = None
 
-
     def get_head_position(self) -> tuple[int, int]:
         """Gets snake head position"""
         return self.positions[0]
@@ -164,6 +163,7 @@ def set_game(apple: Apple, snake: Snake):
     snake.draw()
     apple.draw()
 
+
 def handle_keys(snake: Snake):
     """Handles keyboard events"""
     for event in pygame.event.get():
@@ -176,6 +176,7 @@ def handle_keys(snake: Snake):
             direction = KEYS_AND_DIRECTIONS.get(event.key)
             if direction:
                 snake.update_direction(direction)
+
 
 def main():
     """Main function"""
